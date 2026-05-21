@@ -59,6 +59,7 @@ description: >
 | `${SKILL_DIR}/scripts/svg_to_pptx.py` | Export to PPTX |
 | `${SKILL_DIR}/scripts/update_spec.py` | Propagate a `spec_lock.md` color / font_family change across all generated SVGs |
 | `${SKILL_DIR}/scripts/user_defaults.py` | Smart defaults — load / infer / pre-fill / save Eight Confirmation preferences |
+| `${SKILL_DIR}/scripts/semantic_template_matcher.py` | Semantic layout template matching from natural-language style descriptions |
 
 For complete tool documentation, see `${SKILL_DIR}/scripts/README.md`.
 
@@ -153,16 +154,39 @@ Import source content (choose based on the situation):
 
 🚧 **GATE**: Step 2 complete; project directory structure is ready.
 
-**Default — free design.** Proceed directly to Step 4. Do NOT query `layouts_index.json` unless triggered. Do NOT ask the user. Do NOT proactively suggest, hint at, or fuzzy-match any template based on content, slug-like words, or vague style descriptions.
+**Default — free design.** When neither an explicit template path nor a confirmed semantic match applies, proceed directly to Step 4. Do NOT query `layouts_index.json` unless triggered. Do NOT proactively suggest or hint at templates outside the semantic-match confirmation step below.
 
-**Template flow triggers ONLY on an explicit template directory path** supplied by the user in their initial message. The trigger rule is mechanical, not interpretive:
+#### 3a. Explicit template path (unchanged — highest priority)
+
+**Template flow triggers on an explicit template directory path** supplied by the user in their initial message. The trigger rule is mechanical, not interpretive:
 
 | User input contains | Step 3 action |
 |---|---|
 | An explicit path to a template directory (e.g. `skills/ppt-master/templates/layouts/academic_defense/`, `projects/foo/template/`, or any other absolute / relative path that resolves to a directory containing `design_spec.md` and one or more page SVGs) | Copy that directory's SVGs + `design_spec.md` + assets into the project, advance |
-| Anything else — including bare template names ("用 academic_defense 模板"), style descriptions ("麦肯锡风格" / "Google style"), brand mentions ("招商银行风格"), vague intent ("想用个模板"), or silence | Skip Step 3, free design |
+| No explicit template path | Continue to **3b Semantic Match** (below); if that does not apply, skip to free design |
 
-There is no slug matching, no name lookup, no fuzzy resolution. A template name without a path does not trigger — the user must give a path the AI can `cd` into.
+There is no slug matching, no name lookup, no fuzzy resolution for explicit paths. A template name without a path does not trigger the copy flow by itself — the user must give a path the AI can `cd` into, **unless** semantic match (3b) proposes one and the user confirms.
+
+#### 3b. Semantic template match (Phase 2 — optional blocking step)
+
+When the user's input contains **no explicit template directory path**, attempt semantic matching **before** falling through to free design:
+
+1. Gather match text: the user's initial request / style description from the current conversation, plus primary `sources/*.md` when present.
+2. Run:
+```bash
+python3 ${SKILL_DIR}/scripts/semantic_template_matcher.py match \
+  --user-text "<user initial text / style description>" \
+  [--content-file <project_path>/sources/<main_source>.md]
+```
+3. Parse JSON stdout. If `matched` is true and `confidence >= 0.6`:
+   - ⛔ **BLOCKING**: Present the matched template (`template_id`, `template_summary`, `matched_keywords`, `confidence`) and ask the user to confirm or decline.
+   - If **confirmed**: set `TEMPLATE_DIR` to the matched built-in path `${SKILL_DIR}/templates/layouts/<template_id>/` and run the copy commands below, then advance.
+   - If **declined** or no response treating it as decline: fall through to free design (Step 4).
+4. If `confidence < 0.6` or `matched` is false: skip this block; proceed to free design without asking.
+
+Semantic match does **not** apply to bare template names alone ("academic_defense"), brand mentions, or out-of-band Q&A. It only fires on natural-language style / scene descriptions embedded in the user's request or source content. Bare names still require an explicit path (3a) or user confirmation here — never auto-resolve silently.
+
+> Style descriptions that fail semantic match ("麦肯锡风格" / "Google style" / "极简风" / etc.) flow naturally into Strategist's Eight Confirmations as part of the user's input — Strategist uses them as a style brief when proposing color / typography / tone in confirmations e and g.
 
 The path may live anywhere — `skills/ppt-master/templates/layouts/<name>/` (the built-in library), `projects/<other_project>/template/` (reusing a previous project's templates), or any other location. Location is irrelevant; what matters is that the user named the path.
 
@@ -174,9 +198,7 @@ cp ${TEMPLATE_DIR}/*.png <project_path>/images/ 2>/dev/null || true
 cp ${TEMPLATE_DIR}/*.jpg <project_path>/images/ 2>/dev/null || true
 ```
 
-> Style descriptions ("麦肯锡风格" / "Keynote 风" / "极简风" / etc.) never trigger Step 3. They flow naturally into Strategist's Eight Confirmations as part of the user's input — Strategist uses them as a style brief when proposing color / typography / tone in confirmations e and g.
-
-> Bare template names ("academic_defense", "招商银行") do NOT trigger Step 3 even if a folder by that name exists in the library. The user must give a path. AI must not "helpfully" resolve a name to a path.
+> Bare template names ("academic_defense", "招商银行") do NOT trigger Step 3a even if a folder by that name exists in the library. The user must give a path, or confirm a semantic-match proposal in 3b. AI must not "helpfully" resolve a name to a path without confirmation.
 
 > "What templates exist?" is out-of-band Q&A — answer by listing entries from `layouts_index.json` together with their paths. Listing alone does not advance the pipeline; the user still has to send a path to trigger the Step 3 copy.
 
@@ -232,7 +254,7 @@ Action: AI reads `${LAYOUT_DIR}/design_spec.md` and `${BRAND_DIR}/design_spec.md
 
 If neither gate trips, fusion proceeds silently and Step 3 advances.
 
-**✅ Checkpoint — Default path proceeds to Step 4 without user interaction. If the user's input contains an explicit template directory path and/or an explicit brand directory path, those directories are copied (or fused) into `<project_path>/templates/` before advancing.**
+**✅ Checkpoint — Default free-design path proceeds to Step 4 without user interaction. If the user's input contains an explicit template directory path, a **confirmed** semantic match (3b), and/or an explicit brand directory path, those directories are copied (or fused) into `<project_path>/templates/` before advancing.**
 
 ---
 

@@ -27,7 +27,7 @@ Future enhancement phases may add scripts, workflow hooks, or additional JSON re
 ## Integration Rules
 
 1. **SKILL.md wins** — If an enhancement conflicts with a BLOCKING gate or explicit user choice in the current session, the pipeline follows SKILL.md.
-2. **Explicit paths only** — Template and brand application still require explicit paths (see SKILL.md Step 3). Semantic maps produce *recommendations*; they do not auto-apply bare template names.
+2. **Explicit paths or confirmed semantic match** — Template application requires an explicit path (SKILL.md Step 3a) or user confirmation of a semantic match (Step 3b). Semantic maps produce *recommendations*; they do not auto-apply bare template names or bypass the confirmation gate.
 3. **Opt-in consumption** — Phases that read these files must document which keys they consume and at which pipeline step.
 4. **Valid JSON** — All `*.json` files must parse with standard `json.load`. Field semantics and examples live in this README and in `_schema_notes` keys inside each file.
 
@@ -130,13 +130,42 @@ python3 skills/ppt-master/scripts/user_defaults.py save \
 
 See the committed file [`user_preferences.json`](./user_preferences.json). It includes `_schema_notes` (field semantics, valid JSON only) and a full sample `scene_defaults["季度汇报"]` with all eight confirmation fields populated.
 
+## Phase 2 — Semantic Template Matching
+
+**Status:** Active  
+**Consumption:** SKILL.md **Step 3b**, after explicit-path check (3a) and before free-design fallback.
+
+### Behavior
+
+1. **Load** — `semantic_template_matcher.py` reads `enhancements/semantic_template_map.json` (`keywords_to_template`, `scene_presets`).
+2. **Match** — When the user supplies no explicit template directory path, scan the user's initial text plus project source content for keyword hits. Score each template as `matched_keyword_count / total_keywords_for_template`; highest score wins.
+3. **Threshold** — If confidence `>= 0.6`, present the match (template ID, summary, matched keywords) and ⛔ **BLOCKING** ask for confirmation.
+4. **Apply** — On confirmation, copy `${SKILL_DIR}/templates/layouts/<template_id>/` into the project (same copy commands as Step 3a). On decline or low confidence, fall through to free design unchanged.
+5. **Scene presets** — `scene_presets` entries keyed by template ID hold full Eight Confirmation bundles for future Strategist integration; Phase 1 `user_defaults.py` does not read them yet.
+
+### Commands
+
+```bash
+# Before Step 3 confirmation (JSON on stdout)
+python3 skills/ppt-master/scripts/semantic_template_matcher.py match \
+  --user-text "帮我做毕业答辩PPT" \
+  --content-file projects/<name>/sources/<main>.md
+```
+
+Stdout fields: `template_id`, `confidence`, `matched_keywords`, `matched` (bool), `template_summary`, `template_dir`.
+
+### Example `semantic_template_map.json`
+
+See the committed file [`semantic_template_map.json`](./semantic_template_map.json). It maps Chinese scene keywords (学术, 答辩, 政企, 党建, …) to layout template IDs in `layouts_index.json`, with matching `scene_presets` per template.
+
 ## Phase Roadmap
 
 | Phase | Focus | Status |
 |-------|-------|--------|
 | 0 | Directory scaffolding and schema files | Active |
 | 1 | Smart defaults loader + Strategist pre-fill + auto-save | Active |
-| 2+ | Semantic template routing, preference UI | Planned |
+| 2 | Semantic template matching + Step 3 confirmation gate | Active |
+| 3+ | Preference UI, extended scene routing | Planned |
 
 When implementing later phases, update the table above and add a **Consumption** subsection describing which SKILL.md step reads which file.
 

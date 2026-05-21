@@ -1,9 +1,329 @@
 {
   "version": "1.0",
-  "keywords_to_template": {},
-  "scene_presets": {},
+  "keywords_to_template": {
+    "学术": "academic_defense",
+    "答辩": "academic_defense",
+    "论文": "academic_defense",
+    "thesis": "academic_defense",
+    "毕业": "academic_defense",
+    "招商": "china_telecom_template",
+    "政企": "china_telecom_template",
+    "电信": "china_telecom_template",
+    "企业": "china_telecom_template",
+    "政府": "government_blue",
+    "政务": "government_blue",
+    "汇报": "government_blue",
+    "机关": "government_blue",
+    "党建": "government_red",
+    "红色": "government_red",
+    "党政": "government_red",
+    "AI": "ai_ops",
+    "人工智能": "ai_ops",
+    "科技": "ai_ops",
+    "技术": "ai_ops",
+    "ops": "ai_ops",
+    "像素": "pixel_retro",
+    "游戏": "pixel_retro",
+    "复古": "pixel_retro",
+    "retro": "pixel_retro",
+    "极客": "pixel_retro",
+    "医学": "medical_university",
+    "医疗": "medical_university",
+    "医院": "medical_university",
+    "心理": "psychology_attachment",
+    "咨询": "psychology_attachment",
+    "治疗": "psychology_attachment",
+    "辅导": "psychology_attachment",
+    "中国电建": "中国电建_常规",
+    "电建": "中国电建_常规",
+    "央企": "中国电建_常规",
+    "工程": "中国电建_常规",
+    "现代": "中国电建_现代",
+    "高端": "中国电建_现代",
+    "中汽研": "中汽研_商务",
+    "汽车": "中汽研_商务",
+    "认证": "中汽研_商务",
+    "检测": "中汽研_商务"
+  },
+  "scene_presets": {
+    "academic_defense": {
+      "layout_template": "academic_defense",
+      "default_canvas": "ppt169",
+      "page_count_range": "20-30",
+      "target_audience": "答辩委员会与学术同行",
+      "use_case": "学位论文答辩、学术报告、科研进展汇报",
+      "core_message": "研究问题、方法、结果与贡献",
+      "style_mode": "A) General Versatile",
+      "style_descriptor": "academic defense, rigorous hierarchy, research-oriented",
+      "color_scheme": {
+        "primary": "#003366",
+        "secondary": "#0066CC",
+        "accent": "#CC0000",
+        "background": "#FFFFFF",
+        "text": "#333333"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-outline",
+      "typography_plan": {
+        "title_stack": "\"Microsoft YaHei\", \"微软雅黑\", Arial, sans-serif",
+        "body_stack": "\"Microsoft YaHei\", \"微软雅黑\", Arial, sans-serif",
+        "body_baseline_px": 24
+      },
+      "image_approach": "Primarily A) No images on data slides; user-provided figures for research charts when needed"
+    },
+    "china_telecom_template": {
+      "layout_template": "china_telecom_template",
+      "default_canvas": "ppt169",
+      "page_count_range": "15-25",
+      "target_audience": "政企客户与内部管理层",
+      "use_case": "电信方案汇报、政企数字化转型、招商推介",
+      "core_message": "方案价值、实施路径与预期成效",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "authoritative enterprise-government hybrid, structured and restrained",
+      "color_scheme": {
+        "primary": "#C00000",
+        "secondary": "#D9D9D9",
+        "accent": "#E55B5B",
+        "background": "#FFFFFF",
+        "text": "#2B2F33"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-filled",
+      "typography_plan": {
+        "title_stack": "\"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+        "body_stack": "\"Microsoft YaHei\", \"PingFang SC\", \"Source Han Sans SC\", Arial, sans-serif",
+        "body_baseline_px": 16
+      },
+      "image_approach": "Mixed B) Placeholder blocks and D) Web-sourced for skyline or product visuals"
+    },
+    "government_blue": {
+      "layout_template": "government_blue",
+      "default_canvas": "ppt169",
+      "page_count_range": "18-28",
+      "target_audience": "政府部门与项目评审方",
+      "use_case": "政务汇报、重点项目推介、规划方案解读",
+      "core_message": "项目背景、进展成效与下一步计划",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "grand tech-forward government style, modern and professional",
+      "color_scheme": {
+        "primary": "#0050B3",
+        "secondary": "#00B4D8",
+        "accent": "#003366",
+        "background": "#FFFFFF",
+        "text": "#1A1A1A"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-filled",
+      "typography_plan": {
+        "title_stack": "\"Microsoft YaHei\", \"SimHei\", \"Source Han Sans SC\", sans-serif",
+        "body_stack": "\"Microsoft YaHei\", \"SimHei\", Arial, sans-serif",
+        "body_baseline_px": 18
+      },
+      "image_approach": "Primarily A) No images; D) Web-sourced for project photos when needed"
+    },
+    "government_red": {
+      "layout_template": "government_red",
+      "default_canvas": "ppt169",
+      "page_count_range": "18-28",
+      "target_audience": "党政机关与党建学习受众",
+      "use_case": "党建工作汇报、政策解读、专题学习",
+      "core_message": "政策要点、落实举措与成效总结",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "authoritative dignified government style, red-blue accents",
+      "color_scheme": {
+        "primary": "#8B0000",
+        "secondary": "#003366",
+        "accent": "#DAA520",
+        "background": "#FFFFFF",
+        "text": "#1A1A1A"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-filled",
+      "typography_plan": {
+        "title_stack": "\"Microsoft YaHei\", \"SimHei\", sans-serif",
+        "body_stack": "\"Microsoft YaHei\", \"SimHei\", Arial, sans-serif",
+        "body_baseline_px": 18
+      },
+      "image_approach": "Primarily A) No images; user-provided photos for event coverage when needed"
+    },
+    "ai_ops": {
+      "layout_template": "ai_ops",
+      "default_canvas": "ppt169",
+      "page_count_range": "20-35",
+      "target_audience": "技术管理层与架构评审方",
+      "use_case": "AI 运维架构、数字化转型、智慧基础设施方案",
+      "core_message": "架构分层、能力模块与落地路径",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "information-dense telecom enterprise style, modular zoning",
+      "color_scheme": {
+        "primary": "#C00000",
+        "secondary": "#2E75B6",
+        "accent": "#5B9BD5",
+        "background": "#FFFFFF",
+        "text": "#000000"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-filled",
+      "typography_plan": {
+        "title_stack": "\"Microsoft YaHei\", \"SimHei\", sans-serif",
+        "body_stack": "\"Microsoft YaHei\", \"SimHei\", Arial, sans-serif",
+        "body_baseline_px": 16
+      },
+      "image_approach": "Primarily A) Diagram-heavy slides; B) Placeholder for architecture screenshots"
+    },
+    "pixel_retro": {
+      "layout_template": "pixel_retro",
+      "default_canvas": "ppt169",
+      "page_count_range": "15-25",
+      "target_audience": "开发者与极客社区",
+      "use_case": "技术分享、编程教程、游戏介绍",
+      "core_message": "核心概念、演示与互动亮点",
+      "style_mode": "A) General Versatile",
+      "style_descriptor": "retro gaming neon cyberpunk, 8-bit geek aesthetic",
+      "color_scheme": {
+        "primary": "#39FF14",
+        "secondary": "#FF2E97",
+        "accent": "#00D4FF",
+        "background": "#0D1117",
+        "text": "#E6EDF3"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-outline",
+      "typography_plan": {
+        "title_stack": "Consolas, Monaco, \"Courier New\", monospace",
+        "body_stack": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Microsoft YaHei\", sans-serif",
+        "body_baseline_px": 18
+      },
+      "image_approach": "Mixed C) AI-generated pixel art and user screenshots"
+    },
+    "medical_university": {
+      "layout_template": "medical_university",
+      "default_canvas": "ppt169",
+      "page_count_range": "20-30",
+      "target_audience": "医学同行与临床教学受众",
+      "use_case": "医学学术报告、病例讨论、医院工作汇报",
+      "core_message": "临床问题、证据与诊疗/研究结论",
+      "style_mode": "A) General Versatile",
+      "style_descriptor": "professional medical academic, trustworthy and life-affirming",
+      "color_scheme": {
+        "primary": "#0066B3",
+        "secondary": "#00A86B",
+        "accent": "#FF6B35",
+        "background": "#FFFFFF",
+        "text": "#333333"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-outline",
+      "typography_plan": {
+        "title_stack": "\"Microsoft YaHei\", Arial, sans-serif",
+        "body_stack": "\"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+        "body_baseline_px": 24
+      },
+      "image_approach": "User-provided clinical images and diagrams; A) No decorative stock photos"
+    },
+    "psychology_attachment": {
+      "layout_template": "psychology_attachment",
+      "default_canvas": "ppt169",
+      "page_count_range": "18-28",
+      "target_audience": "心理咨询从业者与培训学员",
+      "use_case": "心理治疗培训、咨询案例分析、专业分享",
+      "core_message": "理论框架、案例理解与干预要点",
+      "style_mode": "A) General Versatile",
+      "style_descriptor": "warm healing professional, secure-base visual metaphor",
+      "color_scheme": {
+        "primary": "#2E5C8E",
+        "secondary": "#3D8B7A",
+        "accent": "#E07843",
+        "background": "#F8FAFC",
+        "text": "#1E293B"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-outline",
+      "typography_plan": {
+        "title_stack": "\"Microsoft YaHei\", Georgia, serif",
+        "body_stack": "\"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+        "body_baseline_px": 20
+      },
+      "image_approach": "Primarily A) Concept diagrams; minimal photography for case anonymization"
+    },
+    "中国电建_常规": {
+      "layout_template": "中国电建_常规",
+      "default_canvas": "ppt169",
+      "page_count_range": "18-30",
+      "target_audience": "业主方、合作伙伴与集团内部",
+      "use_case": "工程项目汇报、技术方案、商务洽谈",
+      "core_message": "工程概况、技术亮点与实施保障",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "POWERCHINA standard, composed state-owned enterprise style",
+      "color_scheme": {
+        "primary": "#00418D",
+        "secondary": "#0066CC",
+        "accent": "#C41E3A",
+        "background": "#FFFFFF",
+        "text": "#1A1A1A"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-filled",
+      "typography_plan": {
+        "title_stack": "\"Microsoft YaHei\", \"SimHei\", sans-serif",
+        "body_stack": "\"Microsoft YaHei\", \"SimHei\", Arial, sans-serif",
+        "body_baseline_px": 18
+      },
+      "image_approach": "User-provided project photos; D) Web-sourced for engineering stock when approved"
+    },
+    "中国电建_现代": {
+      "layout_template": "中国电建_现代",
+      "default_canvas": "ppt169",
+      "page_count_range": "15-25",
+      "target_audience": "国际客户与高端商务受众",
+      "use_case": "重大工程展示、国际市场推广、科技创新发布",
+      "core_message": "品牌叙事、技术成就与国际化愿景",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "grand modern precision, deep blue tech gradient, international vision",
+      "color_scheme": {
+        "primary": "#00418D",
+        "secondary": "#0066CC",
+        "accent": "#C41E3A",
+        "background": "#001F45",
+        "text": "#FFFFFF"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-filled",
+      "typography_plan": {
+        "title_stack": "\"Microsoft YaHei\", Arial, sans-serif",
+        "body_stack": "\"Microsoft YaHei\", Arial, sans-serif",
+        "body_baseline_px": 18
+      },
+      "image_approach": "High-quality project hero images; C) AI-generated architectural visuals when needed"
+    },
+    "中汽研_商务": {
+      "layout_template": "中汽研_商务",
+      "default_canvas": "ppt169",
+      "page_count_range": "15-25",
+      "target_audience": "汽车厂商与认证合作方",
+      "use_case": "产品认证展示、检测评价汇报、技术推广",
+      "core_message": "认证能力、标准体系与服务价值",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "CATARC modern tech-business, authoritative and composed",
+      "color_scheme": {
+        "primary": "#003366",
+        "secondary": "#0050B3",
+        "accent": "#D32F2F",
+        "background": "#FFFFFF",
+        "text": "#1F2937"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-filled",
+      "typography_plan": {
+        "title_stack": "\"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+        "body_stack": "\"Microsoft YaHei\", \"PingFang SC\", \"Segoe UI\", sans-serif",
+        "body_baseline_px": 18
+      },
+      "image_approach": "User-provided product and lab photos; minimal decorative imagery"
+    }
+  },
   "_schema_notes": {
     "keywords_to_template": "Maps keyword or tag to layout template ID, e.g. 学术 -> academic_defense, 招商 -> china_telecom_template.",
-    "scene_presets": "Full scene configuration objects for named scenarios (canvas, layout_template, brand path, etc.)."
+    "scene_presets": "Full scene configuration objects for named scenarios (canvas, layout_template, brand path, etc.). Keys align with layout template IDs in layouts_index.json."
   }
 }
