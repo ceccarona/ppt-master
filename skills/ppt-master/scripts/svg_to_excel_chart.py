@@ -384,6 +384,80 @@ def extract_line_data(root: ET.Element, svg_text: str, chart_root: ET.Element | 
     }
 
 
+_LEGEND_HEADER_LABELS = frozenset({
+    'market share',
+    'value (mil)',
+    'total market size',
+})
+
+
+def _extract_pie_from_legend(legend: ET.Element) -> tuple[list[str], list[float]]:
+    """Pair legend label rows with percentage values (supports split tspan text)."""
+    categories: list[str] = []
+    values: list[float] = []
+    pending_label: str | None = None
+
+    for text_elem in legend.iter():
+        if _local_tag(text_elem.tag) != 'text':
+            continue
+        content = _element_text(text_elem)
+        if not content:
+            continue
+
+        lower = content.lower().strip()
+        if lower in _LEGEND_HEADER_LABELS:
+            pending_label = None
+            continue
+
+        pct_match = PERCENT_RE.search(content)
+        if pct_match and '(' in content:
+            pct = float(pct_match.group(1))
+            if pct >= 99.0 and (
+                (pending_label and 'total' in pending_label.lower())
+                or len(categories) >= 2
+            ):
+                pending_label = None
+                continue
+            label = pending_label
+            if not label:
+                label_part = content.split('(')[0].strip()
+                if label_part and not label_part.startswith('$'):
+                    label = label_part
+            categories.append(label or f'Segment {len(categories) + 1}')
+            values.append(pct)
+            pending_label = None
+            continue
+
+        if pct_match and PERCENT_RE.fullmatch(content.strip()):
+            continue
+
+        if _parse_numeric(content) is None and '$' not in content and len(content) < 40:
+            pending_label = content
+
+    return categories, values
+
+
+def _extract_pie_from_slice_labels(scope: ET.Element) -> tuple[list[str], list[float]]:
+    """Fallback: standalone percentage labels on the pie graphic."""
+    categories: list[str] = []
+    values: list[float] = []
+    for text_elem in scope.iter():
+        if _local_tag(text_elem.tag) != 'text':
+            continue
+        content = _element_text(text_elem)
+        if not content:
+            continue
+        pct_match = PERCENT_RE.fullmatch(content.strip())
+        if not pct_match:
+            continue
+        pct = float(pct_match.group(1))
+        if pct >= 99.0:
+            continue
+        categories.append(f'Segment {len(categories) + 1}')
+        values.append(pct)
+    return categories, values
+
+
 def extract_pie_data(root: ET.Element, svg_text: str, chart_root: ET.Element | None = None) -> dict[str, Any]:
     scope = chart_root if chart_root is not None else root
     categories: list[str] = []
@@ -392,48 +466,12 @@ def extract_pie_data(root: ET.Element, svg_text: str, chart_root: ET.Element | N
     legend = root.find(f".//{{{SVG_NS}}}g[@id='legend']")
     if legend is None:
         legend = scope.find(f".//{{{SVG_NS}}}g[@id='legend']")
-    search_roots = [legend] if legend is not None else [scope, root]
 
-    for search_root in search_roots:
-        if search_root is None:
-            continue
-        for text_elem in search_root.iter():
-            if _local_tag(text_elem.tag) != 'text':
-                continue
-            content = _element_text(text_elem)
-            if not content:
-                continue
-            pct_match = PERCENT_RE.search(content)
-            if pct_match and '(' in content:
-                pct = float(pct_match.group(1))
-                label_part = content.split('(')[0].strip()
-                if label_part.startswith('$'):
-                    continue
-                categories.append(label_part or f'Segment {len(categories) + 1}')
-                values.append(pct)
-                continue
-            if pct_match and PERCENT_RE.fullmatch(content.strip()):
-                values.append(float(pct_match.group(1)))
-                categories.append(f'Segment {len(categories) + 1}')
+    if legend is not None:
+        categories, values = _extract_pie_from_legend(legend)
 
-    if len(values) < 2 and legend is not None:
-        rows: list[tuple[str, float]] = []
-        pending_label: str | None = None
-        for text_elem in legend.iter():
-            if _local_tag(text_elem.tag) != 'text':
-                continue
-            content = _element_text(text_elem)
-            if not content or content in ('Market Share', 'Value (Mil)', 'Total Market Size'):
-                continue
-            pct_match = PERCENT_RE.search(content)
-            if pct_match and '(' in content:
-                rows.append((pending_label or f'Segment {len(rows) + 1}', float(pct_match.group(1))))
-                pending_label = None
-            elif _parse_numeric(content) is None and '$' not in content and len(content) < 40:
-                pending_label = content
-        if len(rows) >= 2:
-            categories = [label for label, _ in rows]
-            values = [value for _, value in rows]
+    if len(values) < 2:
+        categories, values = _extract_pie_from_slice_labels(scope)
 
     return {
         'chart_type': 'pie',

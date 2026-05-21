@@ -864,7 +864,7 @@ class SVGQualityChecker:
 
         if ok:
             if summary:
-                result['warnings'].append(f'chart_data_extractable: {message}')
+                result['info']['chart_data_extractable_message'] = message
             return
 
         issue = f'chart_data_extractable: {message}'
