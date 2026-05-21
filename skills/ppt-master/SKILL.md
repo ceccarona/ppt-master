@@ -455,11 +455,14 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 
 **Quality Check Gate (Mandatory)** — after all SVGs, BEFORE annotation handling and speaker notes:
 ```bash
-python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
+python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path> --auto-fix
 ```
-- Any `error` (banned SVG features, viewBox mismatch, spec_lock drift, etc.) MUST be fixed before proceeding — return to Visual Construction, regenerate that page, re-run check.
-- `warning` entries (low-res image, non-PPT-safe font tail, etc.): fix when straightforward, otherwise acknowledge and release.
-- Run against `svg_output/` (not after `finalize_svg.py` — finalize rewrites SVG and masks violations).
+- Runs against `svg_output/` (not after `finalize_svg.py` — finalize rewrites SVG and masks violations).
+- **`--auto-fix`** (Phase 4): automatically repairs high-confidence issues — viewBox / width / height mismatch, missing `font-family`, empty `<g>` tags, coordinates outside canvas, and text overflow (font-size reduction or `<tspan>` wrap). After each fix pass the checker re-runs; up to **2 attempts**. Report to the user: **N** issues found and auto-fixed, **M** need manual review.
+- If auto-fix clears all **errors**, continue to speaker notes and Step 7 without user intervention.
+- If **unfixable** issues remain (forbidden SVG features, broken XML, missing images, attribution gaps, etc.), list them with file + message and ⛔ **BLOCKING** ask whether to regenerate affected pages or proceed with manual edits.
+- `warning`-only leftovers (low-res image, non-PPT-safe font tail, spec_lock drift, etc.): fix when straightforward, otherwise acknowledge and release.
+- Without `--auto-fix`, any `error` MUST be fixed manually before proceeding — return to Visual Construction, regenerate that page, re-run check.
 
 **Logic Construction Phase**: generate speaker notes → `<project_path>/notes/total.md`
 
@@ -468,7 +471,7 @@ python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 ## ✅ Executor Phase Complete
 - [x] Live preview started and kept available at the reported URL
 - [x] All SVGs generated to svg_output/
-- [x] svg_quality_checker.py passed (0 errors)
+- [x] svg_quality_checker.py passed with --auto-fix (0 errors; unfixable items acknowledged if any)
 - [x] Speaker notes generated at notes/total.md
 ```
 

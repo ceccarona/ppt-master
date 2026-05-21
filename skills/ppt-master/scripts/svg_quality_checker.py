@@ -41,6 +41,11 @@ except ImportError:
     _load_animation_config = None
     _validate_animation_config = None
 
+try:
+    from svg_auto_fix import auto_fix_svg  # noqa: E402
+except ImportError:
+    auto_fix_svg = None  # auto-fix mode unavailable
+
 
 HEX_VALUE_RE = re.compile(r"#[0-9A-Fa-f]{3,8}")
 
@@ -1337,6 +1342,167 @@ class SVGQualityChecker:
         print(f"\n[REPORT] Check report exported: {output_file}")
 
 
+def _resolve_svg_targets(target: str, template_mode: bool) -> tuple[list[Path], Path | None]:
+    """Return SVG files to check and optional project root for spec_lock lookup."""
+    dir_path = Path(target)
+    project_root: Path | None = None
+
+    if not dir_path.exists():
+        return [], None
+
+    if dir_path.is_file():
+        svg_files = [dir_path]
+        project_root = dir_path.parent.parent if dir_path.parent.name == "svg_output" else dir_path.parent
+        return svg_files, project_root
+
+    if template_mode:
+        return sorted(dir_path.glob("*.svg")), None
+
+    svg_output = dir_path / "svg_output" if (dir_path / "svg_output").exists() else dir_path
+    project_root = dir_path if (dir_path / "svg_output").exists() else dir_path.parent
+    return sorted(svg_output.glob("*.svg")), project_root
+
+
+def _resolve_spec_lock_path(project_root: Path | None, svg_files: list[Path]) -> Path | None:
+    if project_root is not None:
+        candidate = project_root / "spec_lock.md"
+        if candidate.exists():
+            return candidate
+    if svg_files:
+        for base in (svg_files[0].parent, svg_files[0].parent.parent):
+            candidate = base / "spec_lock.md"
+            if candidate.exists():
+                return candidate
+    return None
+
+
+def _collect_issue_messages(results: list[Dict]) -> list[tuple[str, str, str]]:
+    """Return (file, severity, message) tuples for all errors and warnings."""
+    items: list[tuple[str, str, str]] = []
+    for result in results:
+        fname = result.get("file", "unknown")
+        for msg in result.get("errors", []):
+            items.append((fname, "error", msg))
+        for msg in result.get("warnings", []):
+            items.append((fname, "warning", msg))
+    return items
+
+
+def _run_auto_fix_pass(
+    svg_files: list[Path],
+    spec_lock_path: Path | None,
+    *,
+    dry_run: bool = False,
+) -> tuple[int, list[str], list[str]]:
+    """Run auto_fix_svg on every file. Returns (fix_count, warnings, errors)."""
+    if auto_fix_svg is None:
+        return 0, [], ["svg_auto_fix module unavailable"]
+
+    fix_count = 0
+    warnings: list[str] = []
+    errors: list[str] = []
+
+    for svg_file in svg_files:
+        report = auto_fix_svg(
+            svg_file,
+            spec_lock_path,
+            dry_run=dry_run,
+        )
+        fix_count += len(report.get("fixed", []))
+        for msg in report.get("warnings", []):
+            warnings.append(f"{svg_file.name}: {msg}")
+        for msg in report.get("errors", []):
+            errors.append(f"{svg_file.name}: {msg}")
+
+    return fix_count, warnings, errors
+
+
+def run_quality_check_with_auto_fix(
+    target: str,
+    expected_format: str | None = None,
+    *,
+    template_mode: bool = False,
+    max_fix_attempts: int = 2,
+) -> tuple[SVGQualityChecker, dict[str, int | list]]:
+    """Run quality check; optionally auto-fix and re-check up to max_fix_attempts times."""
+    svg_files, project_root = _resolve_svg_targets(target, template_mode)
+    spec_lock_path = _resolve_spec_lock_path(project_root, svg_files)
+
+    auto_fix_meta: dict[str, int | list] = {
+        "fix_attempts": 0,
+        "total_fixed": 0,
+        "auto_fix_warnings": [],
+        "auto_fix_errors": [],
+        "unfixable": [],
+        "initial_issues": 0,
+    }
+
+    checker = SVGQualityChecker(template_mode=template_mode)
+    checker.check_directory(target, expected_format)
+    initial_issues = _collect_issue_messages(checker.results)
+    auto_fix_meta["initial_issues"] = len(initial_issues)
+
+    if template_mode or auto_fix_svg is None or not svg_files:
+        return checker, auto_fix_meta
+
+    remaining = initial_issues
+    for attempt in range(1, max_fix_attempts + 1):
+        if not remaining:
+            break
+
+        print(f"\n[AUTO-FIX] Attempt {attempt}/{max_fix_attempts} — "
+              f"{len(remaining)} issue(s) to address...")
+        fixed, warn, err = _run_auto_fix_pass(svg_files, spec_lock_path)
+        auto_fix_meta["fix_attempts"] = attempt
+        auto_fix_meta["total_fixed"] = int(auto_fix_meta["total_fixed"]) + fixed
+        auto_fix_meta["auto_fix_warnings"].extend(warn)
+        auto_fix_meta["auto_fix_errors"].extend(err)
+
+        if fixed == 0 and not err:
+            break
+
+        checker = SVGQualityChecker(template_mode=template_mode)
+        checker.check_directory(target, expected_format)
+        remaining = _collect_issue_messages(checker.results)
+
+    if remaining:
+        auto_fix_meta["unfixable"] = [
+            f"[{severity}] {fname}: {msg}"
+            for fname, severity, msg in remaining
+        ]
+
+    return checker, auto_fix_meta
+
+
+def _print_auto_fix_summary(meta: dict[str, int | list]) -> None:
+    initial = int(meta.get("initial_issues", 0))
+    fixed = int(meta.get("total_fixed", 0))
+    unfixable = meta.get("unfixable", [])
+    attempts = int(meta.get("fix_attempts", 0))
+
+    print("\n" + "=" * 80)
+    print("[AUTO-FIX] Summary")
+    print("=" * 80)
+    print(f"  Initial issues: {initial}")
+    print(f"  Fix attempts:   {attempts}")
+    print(f"  Actions taken:  {fixed}")
+
+    resolved = max(0, initial - len(unfixable))
+    manual = len(unfixable)
+    print(f"  Auto-resolved:  {resolved}")
+    print(f"  Manual review:  {manual}")
+
+    for msg in meta.get("auto_fix_errors", []):
+        print(f"  [ERROR] {msg}")
+
+    if unfixable:
+        print("\n  Unfixable issues (manual review required):")
+        for item in unfixable[:20]:
+            print(f"    {item}")
+        if len(unfixable) > 20:
+            print(f"    ... and {len(unfixable) - 20} more")
+
+
 def print_usage() -> None:
     """Print CLI usage information."""
     print("PPT Master - SVG Quality Check Tool\n")
@@ -1352,6 +1518,9 @@ def print_usage() -> None:
     print("  python3 scripts/svg_quality_checker.py templates/layouts/academic_defense --template-mode")
     print("\nOptions:")
     print("  --format <ppt169|ppt43|...>   Expected canvas format")
+    print("  --auto-fix                    Auto-fix common SVG issues (viewBox, fonts,")
+    print("                                  empty groups, coordinates, text overflow)")
+    print("                                  and re-check up to 2 times")
     print("  --template-mode               Validate a templates/layouts/<id> directory:")
     print("                                  glob *.svg directly, skip spec_lock checks,")
     print("                                  enforce roster ↔ design_spec.md Page Roster consistency,")
@@ -1374,7 +1543,7 @@ def main() -> None:
         sys.exit(1)
 
     template_mode = '--template-mode' in sys.argv
-    checker = SVGQualityChecker(template_mode=template_mode)
+    auto_fix = '--auto-fix' in sys.argv
 
     # Parse arguments
     target = sys.argv[1]
@@ -1385,19 +1554,50 @@ def main() -> None:
         if idx + 1 < len(sys.argv):
             expected_format = sys.argv[idx + 1]
 
-    # Execute check
+    # Execute check (with optional auto-fix loop)
     if target == '--all':
-        # Check all example projects
         base_dir = sys.argv[2] if len(sys.argv) > 2 else 'examples'
         from project_utils import find_all_projects
         projects = find_all_projects(base_dir)
+        checker = SVGQualityChecker(template_mode=template_mode)
+        combined_meta: dict[str, int | list] = {
+            "fix_attempts": 0,
+            "total_fixed": 0,
+            "auto_fix_warnings": [],
+            "auto_fix_errors": [],
+            "unfixable": [],
+            "initial_issues": 0,
+        }
 
         for project in projects:
             print(f"\n{'=' * 80}")
             print(f"Checking project: {project.name}")
             print('=' * 80)
-            checker.check_directory(str(project))
+            if auto_fix and not template_mode:
+                proj_checker, meta = run_quality_check_with_auto_fix(
+                    str(project), expected_format, template_mode=template_mode,
+                )
+                for key in ("fix_attempts", "total_fixed", "initial_issues"):
+                    combined_meta[key] = int(combined_meta[key]) + int(meta.get(key, 0))
+                for key in ("auto_fix_warnings", "auto_fix_errors", "unfixable"):
+                    combined_meta[key].extend(meta.get(key, []))
+                checker.results.extend(proj_checker.results)
+                for k, v in proj_checker.summary.items():
+                    checker.summary[k] += v
+                for k, v in proj_checker.issue_types.items():
+                    checker.issue_types[k] += v
+            else:
+                checker.check_directory(str(project), expected_format)
+
+        if auto_fix and not template_mode:
+            _print_auto_fix_summary(combined_meta)
+    elif auto_fix and not template_mode:
+        checker, auto_fix_meta = run_quality_check_with_auto_fix(
+            target, expected_format, template_mode=template_mode,
+        )
+        _print_auto_fix_summary(auto_fix_meta)
     else:
+        checker = SVGQualityChecker(template_mode=template_mode)
         checker.check_directory(target, expected_format)
 
     # Print summary
