@@ -317,6 +317,7 @@ def create_pptx_with_native_svg(
     workers: int | None = None,
     merge_paragraphs: bool = False,
     conversion_trace_path: Path | None = None,
+    chart_mode: str = 'svg',
 ) -> bool:
     """Create a PPTX file with native SVG.
 
@@ -345,6 +346,7 @@ def create_pptx_with_native_svg(
         use_narration_timings: Whether to set slide auto-advance from audio duration.
         narration_padding: Extra seconds added after each narration before advancing.
         conversion_trace_path: Optional JSON path for native conversion diagnostics.
+        chart_mode: Chart export mode — ``svg`` (default), ``excel``, or ``hybrid``.
 
     Returns:
         Whether all slides were successfully created.
@@ -389,6 +391,8 @@ def create_pptx_with_native_svg(
     if verbose:
         print(f"  Slide dimensions: {pixel_width} x {pixel_height} px")
         print(f"  SVG file count: {len(svg_files)}")
+        if chart_mode != 'svg':
+            print(f"  Chart mode: {chart_mode}")
         if use_native_shapes:
             print(f"  Mode: Native DrawingML shapes (directly editable)")
         elif use_compat_mode:
@@ -815,6 +819,24 @@ def create_pptx_with_native_svg(
                     arcname = file_path.relative_to(extract_dir)
                     zf.write(file_path, arcname)
         shutil.move(str(temp_output_path), str(output_path))
+
+        if chart_mode != 'svg':
+            try:
+                from .chart_embedder import embed_charts_in_pptx
+                embed_charts_in_pptx(
+                    output_path,
+                    svg_files,
+                    chart_mode=chart_mode,
+                    pixel_width=pixel_width,
+                    pixel_height=pixel_height,
+                    verbose=verbose,
+                    temp_dir=temp_dir,
+                )
+            except Exception as exc:
+                if verbose:
+                    print(f"  [chart] Embedding failed: {exc}")
+                if chart_mode == 'excel':
+                    raise
 
         if conversion_trace_path and conversion_trace is not None:
             conversion_trace_path.parent.mkdir(parents=True, exist_ok=True)

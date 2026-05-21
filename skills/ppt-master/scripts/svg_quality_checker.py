@@ -46,6 +46,12 @@ try:
 except ImportError:
     auto_fix_svg = None  # auto-fix mode unavailable
 
+try:
+    from svg_to_excel_chart import list_charts_in_svg, verify_chart_data_extractable
+except ImportError:
+    list_charts_in_svg = None
+    verify_chart_data_extractable = None
+
 
 HEX_VALUE_RE = re.compile(r"#[0-9A-Fa-f]{3,8}")
 
@@ -189,8 +195,9 @@ class SVGQualityChecker:
         "04_ending": (),  # ending pages legitimately use varied vocabularies
     }
 
-    def __init__(self, *, template_mode: bool = False):
+    def __init__(self, *, template_mode: bool = False, chart_mode: str = 'svg'):
         self.template_mode = template_mode
+        self.chart_mode = chart_mode
         self.results = []
         self.summary = {
             'total': 0,
@@ -286,6 +293,10 @@ class SVGQualityChecker:
                 #    image_sources.json; skip in template mode.
                 if not self.template_mode:
                     self._check_sourced_image_attribution(content, svg_path, result)
+
+                # 10. Chart data extraction (when excel/hybrid chart export requested)
+                if not self.template_mode and self.chart_mode in ('excel', 'hybrid'):
+                    self._check_chart_data_extractable(svg_path, result)
 
             # Determine pass/fail
             result['passed'] = len(result['errors']) == 0
@@ -814,6 +825,54 @@ class SVGQualityChecker:
                     f"references/image-searcher.md §7."
                 )
 
+    def _svg_has_chart_markers(self, content: str, svg_path: Path) -> bool:
+        content_lower = content.lower()
+        if 'chart-plot-area' in content_lower:
+            return True
+        if re.search(r'\bid=["\'][^"\']*chart[^"\']*["\']', content, re.IGNORECASE):
+            return True
+        if re.search(r'\bclass=["\']chart["\']', content, re.IGNORECASE):
+            return True
+        if list_charts_in_svg is not None:
+            try:
+                return bool(list_charts_in_svg(svg_path))
+            except Exception:
+                return False
+        return False
+
+    def _check_chart_data_extractable(self, svg_path: Path, result: Dict):
+        """Verify chart pages expose extractable numeric data for excel export."""
+        if verify_chart_data_extractable is None:
+            result['warnings'].append(
+                'chart_data_extractable: svg_to_excel_chart module unavailable'
+            )
+            return
+
+        try:
+            content = svg_path.read_text(encoding='utf-8')
+        except OSError:
+            return
+
+        if not self._svg_has_chart_markers(content, svg_path):
+            return
+
+        ok, message, summary = verify_chart_data_extractable(svg_path)
+        result['info']['chart_data_extractable'] = ok
+        if summary:
+            result['info']['chart_type'] = summary.get('chart_type')
+            result['info']['chart_data_points'] = summary.get('data_point_count')
+
+        if ok:
+            if summary:
+                result['warnings'].append(f'chart_data_extractable: {message}')
+            return
+
+        issue = f'chart_data_extractable: {message}'
+        if self.chart_mode == 'excel':
+            result['errors'].append(issue)
+        else:
+            result['warnings'].append(issue + ' (hybrid mode will keep SVG chart)')
+
     @staticmethod
     def _normalize_size(value: str) -> str:
         """Normalize a font-size value for comparison: lowercase, strip spaces,
@@ -830,6 +889,8 @@ class SVGQualityChecker:
             return 'XML well-formedness'
         elif 'viewBox' in error_msg:
             return 'viewBox issues'
+        elif 'chart_data_extractable' in error_msg:
+            return 'chart_data_extractable'
         elif 'foreignObject' in error_msg:
             return 'foreignObject'
         elif 'font' in error_msg.lower():
@@ -1422,6 +1483,7 @@ def run_quality_check_with_auto_fix(
     expected_format: str | None = None,
     *,
     template_mode: bool = False,
+    chart_mode: str = 'svg',
     max_fix_attempts: int = 2,
 ) -> tuple[SVGQualityChecker, dict[str, int | list]]:
     """Run quality check; optionally auto-fix and re-check up to max_fix_attempts times."""
@@ -1437,7 +1499,7 @@ def run_quality_check_with_auto_fix(
         "initial_issues": 0,
     }
 
-    checker = SVGQualityChecker(template_mode=template_mode)
+    checker = SVGQualityChecker(template_mode=template_mode, chart_mode=chart_mode)
     checker.check_directory(target, expected_format)
     initial_issues = _collect_issue_messages(checker.results)
     auto_fix_meta["initial_issues"] = len(initial_issues)
@@ -1461,7 +1523,7 @@ def run_quality_check_with_auto_fix(
         if fixed == 0 and not err:
             break
 
-        checker = SVGQualityChecker(template_mode=template_mode)
+        checker = SVGQualityChecker(template_mode=template_mode, chart_mode=chart_mode)
         checker.check_directory(target, expected_format)
         remaining = _collect_issue_messages(checker.results)
 
@@ -1521,6 +1583,9 @@ def print_usage() -> None:
     print("  --auto-fix                    Auto-fix common SVG issues (viewBox, fonts,")
     print("                                  empty groups, coordinates, text overflow)")
     print("                                  and re-check up to 2 times")
+    print("  --chart-mode {svg,excel,hybrid}")
+    print("                                  When excel or hybrid: verify chart pages expose")
+    print("                                  extractable numeric data (chart_data_extractable)")
     print("  --template-mode               Validate a templates/layouts/<id> directory:")
     print("                                  glob *.svg directly, skip spec_lock checks,")
     print("                                  enforce roster ↔ design_spec.md Page Roster consistency,")
@@ -1544,6 +1609,11 @@ def main() -> None:
 
     template_mode = '--template-mode' in sys.argv
     auto_fix = '--auto-fix' in sys.argv
+    chart_mode = 'svg'
+    if '--chart-mode' in sys.argv:
+        idx = sys.argv.index('--chart-mode')
+        if idx + 1 < len(sys.argv):
+            chart_mode = sys.argv[idx + 1]
 
     # Parse arguments
     target = sys.argv[1]
@@ -1559,7 +1629,7 @@ def main() -> None:
         base_dir = sys.argv[2] if len(sys.argv) > 2 else 'examples'
         from project_utils import find_all_projects
         projects = find_all_projects(base_dir)
-        checker = SVGQualityChecker(template_mode=template_mode)
+        checker = SVGQualityChecker(template_mode=template_mode, chart_mode=chart_mode)
         combined_meta: dict[str, int | list] = {
             "fix_attempts": 0,
             "total_fixed": 0,
@@ -1576,6 +1646,7 @@ def main() -> None:
             if auto_fix and not template_mode:
                 proj_checker, meta = run_quality_check_with_auto_fix(
                     str(project), expected_format, template_mode=template_mode,
+                    chart_mode=chart_mode,
                 )
                 for key in ("fix_attempts", "total_fixed", "initial_issues"):
                     combined_meta[key] = int(combined_meta[key]) + int(meta.get(key, 0))
@@ -1594,10 +1665,11 @@ def main() -> None:
     elif auto_fix and not template_mode:
         checker, auto_fix_meta = run_quality_check_with_auto_fix(
             target, expected_format, template_mode=template_mode,
+            chart_mode=chart_mode,
         )
         _print_auto_fix_summary(auto_fix_meta)
     else:
-        checker = SVGQualityChecker(template_mode=template_mode)
+        checker = SVGQualityChecker(template_mode=template_mode, chart_mode=chart_mode)
         checker.check_directory(target, expected_format)
 
     # Print summary

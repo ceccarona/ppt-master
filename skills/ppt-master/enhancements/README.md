@@ -228,6 +228,40 @@ python3 skills/ppt-master/scripts/svg_auto_fix.py auto-fix \
 
 Stdout from `auto_fix_svg()`: `{"fixed": [...], "warnings": [...], "errors": [...]}`.
 
+## Phase 5 — Chart Dual-Mode Export
+
+**Status:** Active  
+**Consumption:** SKILL.md **Step 6** quality gate (`--chart-mode excel|hybrid` on `svg_quality_checker.py`) and **Step 7.3** export (`--chart-mode` on `svg_to_pptx.py`).
+
+### Behavior
+
+1. **Extract** — `svg_to_excel_chart.py` reads chart containers (`id` containing `chart`, `class="chart"`, or `#chartArea`) and numeric labels from bar groups, line polylines + axis scale, or pie legend percentages.
+2. **Excel workbook** — `svg_chart_to_excel()` writes an `.xlsx` with real openpyxl chart objects (bar / line / pie) plus a data sheet.
+3. **PPTX embed** — `svg_to_pptx.py --chart-mode excel|hybrid` post-processes the exported deck, placing native PowerPoint charts (python-pptx `ChartData` + `BarChart`/`LineChart`/`PieChart`) sized to the SVG `<!-- chart-plot-area -->` marker.
+4. **Quality gate** — `svg_quality_checker.py --chart-mode excel` adds `chart_data_extractable` on chart pages; hard error in `excel` mode, warning + SVG fallback in `hybrid`.
+5. **Default unchanged** — omitting `--chart-mode` keeps decorative SVG chart export.
+
+### Commands
+
+```bash
+# Standalone: SVG → XLSX chart workbook
+python3 skills/ppt-master/scripts/svg_to_excel_chart.py convert \
+  --svg templates/charts/bar_chart.svg \
+  --output /tmp/bar_chart.xlsx \
+  --chart-type auto
+
+# Step 6 — verify extractability before excel export
+python3 skills/ppt-master/scripts/svg_quality_checker.py projects/<name> \
+  --auto-fix --chart-mode excel
+
+# Step 7.3 — export with native PowerPoint charts
+python3 skills/ppt-master/scripts/svg_to_pptx.py projects/<name> --chart-mode excel
+# hybrid: dense numeric charts → Excel, decorative charts → SVG
+python3 skills/ppt-master/scripts/svg_to_pptx.py projects/<name> --chart-mode hybrid
+```
+
+**Dependency:** `openpyxl>=3.1.0` (optional; required only for `--chart-mode excel|hybrid` and the standalone converter).
+
 ## Phase Roadmap
 
 | Phase | Focus | Status |
@@ -237,7 +271,8 @@ Stdout from `auto_fix_svg()`: `{"fixed": [...], "warnings": [...], "errors": [..
 | 2 | Semantic template matching + Step 3 confirmation gate | Active |
 | 3 | Scene presets library + Step 3c exact-keyword routing | Active |
 | 4 | SVG auto debug fix (`--auto-fix` quality gate) | Active |
-| 5+ | Preference UI, extended scene routing | Planned |
+| 5 | Chart dual-mode export (SVG shapes vs native Excel/PPT charts) | Active |
+| 6+ | Preference UI, extended scene routing | Planned |
 
 When implementing later phases, update the table above and add a **Consumption** subsection describing which SKILL.md step reads which file.
 

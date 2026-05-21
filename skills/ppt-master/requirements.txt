@@ -56,11 +56,21 @@ ebooklib>=0.18
 nbconvert>=7.0.0
 
 # ─────────────────────────────────────────────────────────────
+# Chart dual-mode export / 图表双模式导出 (skills/ppt-master/scripts/svg_to_excel_chart.py)
+# ─────────────────────────────────────────────────────────────────
+# Extracts numeric data from SVG chart pages and writes real Excel chart objects.
+# Used by svg_to_pptx.py --chart-mode excel|hybrid (Step 7.3).
+# 从 SVG 图表页提取数值并生成 Excel 图表对象；供 svg_to_pptx.py --chart-mode 使用。
+# Optional unless --chart-mode excel or hybrid is requested.
+# 仅在 --chart-mode excel|hybrid 时需要。
+openpyxl>=3.1.0
+
+# ─────────────────────────────────────────────────────────────
 # Excel to Markdown tool / Excel 转 Markdown 工具 (skills/ppt-master/scripts/source_to_md/excel_to_md.py)
 # ─────────────────────────────────────────────────────────────
 # Converts .xlsx/.xlsm workbooks to Markdown while preserving sheet structure.
 # 用于将 .xlsx/.xlsm 工作簿转换为 Markdown，并保留工作表结构。
-openpyxl>=3.1.0
+# (Also satisfies chart dual-mode export above when installed once.)
 #
 # Fallback path — only needed for less common formats
 # (.doc .odt .rtf .tex/.latex .rst .org .typ).

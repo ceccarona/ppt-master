@@ -456,9 +456,12 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 **Quality Check Gate (Mandatory)** — after all SVGs, BEFORE annotation handling and speaker notes:
 ```bash
 python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path> --auto-fix
+# When exporting with native Excel charts (Step 7.3 --chart-mode excel|hybrid):
+python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path> --auto-fix --chart-mode excel
 ```
 - Runs against `svg_output/` (not after `finalize_svg.py` — finalize rewrites SVG and masks violations).
 - **`--auto-fix`** (Phase 4): automatically repairs high-confidence issues — viewBox / width / height mismatch, missing `font-family`, empty `<g>` tags, coordinates outside canvas, and text overflow (font-size reduction or `<tspan>` wrap). After each fix pass the checker re-runs; up to **2 attempts**. Report to the user: **N** issues found and auto-fixed, **M** need manual review.
+- **`--chart-mode excel|hybrid`** (Phase 5): when Step 7 will use `--chart-mode excel` or `hybrid`, add the same flag here so `chart_data_extractable` verifies numeric data can be read from chart SVGs before export. `excel` mode treats failed extraction as a hard error; `hybrid` warns and falls back to decorative SVG charts.
 - If auto-fix clears all **errors**, continue to speaker notes and Step 7 without user intervention.
 - If **unfixable** issues remain (forbidden SVG features, broken XML, missing images, attribution gaps, etc.), list them with file + message and ⛔ **BLOCKING** ask whether to regenerate affected pages or proceed with manual edits.
 - `warning`-only leftovers (low-res image, non-PPT-safe font tail, spec_lock drift, etc.): fix when straightforward, otherwise acknowledge and release.
@@ -513,7 +516,15 @@ python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
 #
 # Add --svg-snapshot to additionally emit the SVG-image preview pptx alongside the native pptx:
 #   exports/<project_name>_<timestamp>_svg.pptx      ← SVG preview pptx (reads svg_final/)
+#
+# Chart dual-mode export (Phase 5 — opt-in, default remains SVG shapes):
+#   --chart-mode svg     decorative SVG chart shapes (default, backward compatible)
+#   --chart-mode excel   native PowerPoint chart objects from extracted SVG data (requires openpyxl)
+#   --chart-mode hybrid  Excel for data-heavy charts, SVG for visual/decorative charts
+python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path> --chart-mode excel
 ```
+
+> **Chart export modes (`--chart-mode`)** — default `svg` keeps today's behavior (charts export as editable SVG/DrawingML shapes). Use `excel` when the user wants **native PowerPoint charts** whose data can be edited in Excel — requires `openpyxl` and chart pages with extractable numeric labels (bar value text, line plot points + axis scale, pie legend percentages). Run quality check with `--chart-mode excel` (or `hybrid`) in Step 6 first so `chart_data_extractable` catches unreadable charts. `hybrid` auto-promotes dense numeric charts (≥5 bars, ≥8 line points, ≥4 pie slices) to Excel charts and leaves decorative/infographic charts as SVG.
 
 > The native pptx consumes `svg_output/` directly so the converter can preserve
 > high-fidelity primitives (icon `<use>` placeholders, image `preserveAspectRatio`

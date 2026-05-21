@@ -237,6 +237,16 @@ Recorded narration:
                         help='Parallel workers for SVG→PNG pre-rendering. '
                              'Default: min(cpu, pages, 8). Set 1 for sequential.')
 
+    parser.add_argument(
+        '--chart-mode',
+        type=str,
+        choices=['svg', 'excel', 'hybrid'],
+        default='svg',
+        help='Chart export mode: svg (default, decorative SVG shapes), '
+             'excel (native PowerPoint charts from extracted data; requires openpyxl), '
+             'hybrid (Excel for data-heavy charts, SVG for visual charts).',
+    )
+
     args = parser.parse_args()
 
     project_path = Path(args.project_path)
@@ -482,6 +492,17 @@ Recorded narration:
     else:
         cache_dir = project_path / '.cache' / 'svg_png'
 
+    if args.chart_mode in ('excel', 'hybrid'):
+        try:
+            import openpyxl  # noqa: F401
+        except ImportError:
+            print(
+                'Error: --chart-mode excel/hybrid requires openpyxl '
+                '(pip install openpyxl)',
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
     # svg_files is per-product (native vs legacy may now read different
     # directories); everything else is shared.
     shared_kwargs = dict(
@@ -505,6 +526,7 @@ Recorded narration:
         cache_dir=cache_dir,
         workers=args.workers,
         merge_paragraphs=args.merge_paragraphs,
+        chart_mode=args.chart_mode,
     )
 
     success = True
