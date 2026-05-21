@@ -58,6 +58,7 @@ description: >
 | `${SKILL_DIR}/scripts/finalize_svg.py` | SVG post-processing (unified entry) |
 | `${SKILL_DIR}/scripts/svg_to_pptx.py` | Export to PPTX |
 | `${SKILL_DIR}/scripts/update_spec.py` | Propagate a `spec_lock.md` color / font_family change across all generated SVGs |
+| `${SKILL_DIR}/scripts/user_defaults.py` | Smart defaults — load / infer / pre-fill / save Eight Confirmation preferences |
 
 For complete tool documentation, see `${SKILL_DIR}/scripts/README.md`.
 
@@ -244,6 +245,24 @@ First, read the role definition:
 Read references/strategist.md
 ```
 
+**Smart Defaults (Phase 1)** — run **before** presenting the Eight Confirmations bundle. Load persisted preferences, infer scene from source content or the user's description, and pre-fill recommendations (user may still edit every item; ⛔ BLOCKING gate unchanged).
+
+1. Gather inference text: primary `sources/*.md` when present; otherwise concatenate the user's topic / requirements from the current conversation.
+2. Run prefill (one of):
+```bash
+python3 ${SKILL_DIR}/scripts/user_defaults.py prefill --content-file <project_path>/sources/<main_source>.md
+# when no file yet:
+python3 ${SKILL_DIR}/scripts/user_defaults.py prefill --content-text "<user description + source excerpt>"
+```
+3. Parse JSON stdout: use `prefill` keys (`a_canvas` … `h_image_approach`) as the opening values for confirmations a–h. Where a key is `null`, fall back to Strategist's own recommendation from source analysis.
+4. Include **`provenance_line`** verbatim in the confirmation presentation (e.g. `Using defaults from: scene:季度汇报` or `Using defaults from: global`).
+5. **After** the user explicitly confirms (or modifies and confirms) the eight items, auto-save so the next run remembers:
+```bash
+python3 ${SKILL_DIR}/scripts/user_defaults.py save --from-json '<confirmed_fields_json>' --scene <inferred_scene_or_omit>
+```
+   - Pass `--scene` with the inferred scene name when `prefill` reported a non-null `scene`; omit `--scene` to update global top-level defaults only.
+   - `confirmed_fields_json` uses the same keys returned in `prefill`, plus any user edits.
+
 > ⚠️ **Mandatory gate**: before writing `design_spec.md`, Strategist MUST `read_file templates/design_spec_reference.md` and follow its full I–XI section structure. See `strategist.md` Section 1.
 
 **Eight Confirmations** (full template: `templates/design_spec_reference.md`):
@@ -283,6 +302,8 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 ```markdown
 ## ✅ Strategist Phase Complete
 - [x] Eight Confirmations completed (user confirmed)
+- [x] Smart defaults prefill applied (or global fallback noted)
+- [x] Confirmed values saved via `user_defaults.py save` (when prefill was used)
 - [x] Split-mode note appended below the eight items (heavy or normal variant)
 - [x] Design Specification & Content Outline generated
 - [x] Execution lock (spec_lock.md) generated

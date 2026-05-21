@@ -5,8 +5,61 @@
   "default_style": null,
   "default_color_scheme": null,
   "default_font": null,
-  "scene_defaults": {},
+  "page_count_range": null,
+  "target_audience": null,
+  "use_case": null,
+  "core_message": null,
+  "style_mode": null,
+  "style_descriptor": null,
+  "color_scheme": null,
+  "icon_approach": null,
+  "icon_library": null,
+  "typography_plan": null,
+  "image_approach": null,
+  "scene_defaults": {
+    "季度汇报": {
+      "default_canvas": "ppt169",
+      "page_count_range": "15-20",
+      "target_audience": "管理层与业务团队",
+      "use_case": "季度经营复盘与下季度规划汇报",
+      "core_message": "业绩达成、关键风险与下阶段行动",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "business consulting, data-forward",
+      "color_scheme": {
+        "primary": "#003366",
+        "secondary": "#4A6FA5",
+        "accent": "#E67E22",
+        "background": "#FFFFFF",
+        "text": "#1A1A2E"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-filled",
+      "typography_plan": {
+        "title_stack": "Georgia, \"Microsoft YaHei\", serif",
+        "body_stack": "\"Microsoft YaHei\", \"PingFang SC\", Arial, sans-serif",
+        "body_baseline_px": 18
+      },
+      "image_approach": "Primarily A) No images on data slides; D) Web-sourced for team or product photos when needed"
+    }
+  },
   "_schema_notes": {
-    "scene_defaults": "Keyed by scene name, e.g. 季度汇报, 学术答辩. Each value may override any top-level default field."
+    "version": "Schema version; bump on breaking changes.",
+    "last_updated": "ISO-8601 UTC timestamp set by user_defaults.py save.",
+    "default_canvas": "Global canvas format ID (a). See references/canvas-formats.md.",
+    "page_count_range": "Global recommended page count band (b), e.g. 12-18.",
+    "target_audience": "Global target audience (c).",
+    "use_case": "Global usage occasion (c).",
+    "core_message": "Global core message one-liner (c).",
+    "style_mode": "Global communication mode (d layer 1): A/B/C per strategist.md.",
+    "style_descriptor": "Global visual style descriptor (d layer 2).",
+    "default_style": "Legacy alias for style_descriptor at global level.",
+    "color_scheme": "Global color object (e): primary, secondary, accent, background, text HEX.",
+    "default_color_scheme": "Legacy string alias for color_scheme when not an object.",
+    "icon_approach": "Global icon option (f): A/B/C/D per strategist.md.",
+    "icon_library": "When icon_approach is C: one stylistic library id, e.g. tabler-filled.",
+    "typography_plan": "Global typography (g): title_stack, body_stack, body_baseline_px.",
+    "default_font": "Legacy shorthand; maps to typography_plan.body_stack when plan absent.",
+    "image_approach": "Global image strategy (h): A/B/C/D/E or mixed description.",
+    "scene_defaults": "Per-scene overrides keyed by scene name (季度汇报, 学术答辩, etc.). Same keys as top-level preference fields."
   }
 }

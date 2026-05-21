@@ -45,16 +45,31 @@ User-level defaults persisted across projects.
 | `default_style` | string \| null | Preferred visual style label or template family |
 | `default_color_scheme` | string \| null | Preferred palette or brand color preset reference |
 | `default_font` | string \| null | Preferred primary font family |
+| `page_count_range` | string \| null | Recommended page band for confirmation **b** |
+| `target_audience` | string \| null | Confirmation **c** — audience |
+| `use_case` | string \| null | Confirmation **c** — occasion |
+| `core_message` | string \| null | Confirmation **c** — core message |
+| `style_mode` | string \| null | Confirmation **d** layer 1 (`A/B/C` labels per strategist.md) |
+| `style_descriptor` | string \| null | Confirmation **d** layer 2 — visual descriptor |
+| `color_scheme` | object \| null | Confirmation **e** — HEX roles (`primary`, `secondary`, `accent`, `background`, `text`) |
+| `icon_approach` | string \| null | Confirmation **f** — A/B/C/D option label |
+| `icon_library` | string \| null | Confirmation **f** detail when approach is built-in library |
+| `typography_plan` | object \| null | Confirmation **g** — `title_stack`, `body_stack`, `body_baseline_px` |
+| `image_approach` | string \| null | Confirmation **h** — image strategy label or mixed description |
 | `scene_defaults` | object | Keyed by scene name (e.g. `"季度汇报"`, `"学术答辩"`). Each value is a partial preference object with the same keys as the top level |
 
-Example `scene_defaults` entry:
+Example `scene_defaults` entry (abbreviated):
 
 ```json
 "学术答辩": {
   "default_canvas": "ppt169",
-  "default_style": "academic_defense",
-  "default_color_scheme": null,
-  "default_font": "Source Han Serif SC"
+  "style_mode": "A) General Versatile",
+  "style_descriptor": "academic defense, clean minimal",
+  "typography_plan": {
+    "title_stack": "Cambria, SimSun, serif",
+    "body_stack": "\"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+    "body_baseline_px": 24
+  }
 }
 ```
 
@@ -84,12 +99,44 @@ Example entries:
 }
 ```
 
+## Phase 1 — Smart Defaults System
+
+**Status:** Active  
+**Consumption:** SKILL.md **Step 4** (Strategist), before the Eight Confirmations ⛔ BLOCKING presentation.
+
+### Behavior
+
+1. **Load** — `user_defaults.py` reads `enhancements/user_preferences.json` via `load_preferences()`.
+2. **Infer scene** — `infer_scene_from_content()` scans source markdown or the user's description for keywords (e.g. 季度汇报, 学术, 答辩, 产品发布, 融资, 培训). First match wins; no match → global defaults only.
+3. **Merge** — `get_scene_defaults(scene)` overlays scene keys on global keys when a scene matches and has entries in `scene_defaults`.
+4. **Pre-fill** — Strategist presents confirmations a–h using `prefill` output; `null` slots still get Strategist recommendations from source analysis.
+5. **Provenance** — Every confirmation bundle includes: `Using defaults from: global` or `Using defaults from: scene:<name>`.
+6. **Auto-save** — After the user **confirms** the eight items, run `user_defaults.py save` so the next deck remembers. Scene-specific saves go under `scene_defaults.<scene>`; omit `--scene` to update global top-level fields.
+
+### Commands
+
+```bash
+# Before Eight Confirmations (prefill JSON on stdout)
+python3 skills/ppt-master/scripts/user_defaults.py prefill \
+  --content-file projects/<name>/sources/<main>.md
+
+# After user confirms
+python3 skills/ppt-master/scripts/user_defaults.py save \
+  --scene 季度汇报 \
+  --from-json '{"default_canvas":"ppt169","page_count_range":"15-20",...}'
+```
+
+### Example `user_preferences.json`
+
+See the committed file [`user_preferences.json`](./user_preferences.json). It includes `_schema_notes` (field semantics, valid JSON only) and a full sample `scene_defaults["季度汇报"]` with all eight confirmation fields populated.
+
 ## Phase Roadmap
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| 0 | Directory scaffolding and schema files (this commit) | Active |
-| 1+ | Loader scripts, Strategist hooks, preference UI | Planned |
+| 0 | Directory scaffolding and schema files | Active |
+| 1 | Smart defaults loader + Strategist pre-fill + auto-save | Active |
+| 2+ | Semantic template routing, preference UI | Planned |
 
 When implementing later phases, update the table above and add a **Consumption** subsection describing which SKILL.md step reads which file.
 
