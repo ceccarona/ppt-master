@@ -141,7 +141,7 @@ See the committed file [`user_preferences.json`](./user_preferences.json). It in
 2. **Match** — When the user supplies no explicit template directory path, scan the user's initial text plus project source content for keyword hits. Score each template as `matched_keyword_count / total_keywords_for_template`; highest score wins.
 3. **Threshold** — If confidence `>= 0.6`, present the match (template ID, summary, matched keywords) and ⛔ **BLOCKING** ask for confirmation.
 4. **Apply** — On confirmation, copy `${SKILL_DIR}/templates/layouts/<template_id>/` into the project (same copy commands as Step 3a). On decline or low confidence, fall through to free design unchanged.
-5. **Scene presets** — `scene_presets` entries keyed by template ID hold full Eight Confirmation bundles for future Strategist integration; Phase 1 `user_defaults.py` does not read them yet.
+5. **Scene presets (template-ID keys)** — legacy `scene_presets` entries keyed by layout template ID hold reference bundles; user-facing scene names (季度汇报, …) are added in Phase 3.
 
 ### Commands
 
@@ -158,6 +158,38 @@ Stdout fields: `template_id`, `confidence`, `matched_keywords`, `matched` (bool)
 
 See the committed file [`semantic_template_map.json`](./semantic_template_map.json). It maps Chinese scene keywords (学术, 答辩, 政企, 党建, …) to layout template IDs in `layouts_index.json`, with matching `scene_presets` per template.
 
+## Phase 3 — Scene Presets Library
+
+**Status:** Active  
+**Consumption:** SKILL.md **Step 3c** (exact keyword, before semantic match 3b) and **Step 4** prefill when 3c matched.
+
+### Behavior
+
+1. **Load** — `scene_preset_loader.py` reads `enhancements/semantic_template_map.json` → `scene_presets`.
+2. **Detect** — Exact substring match on user text for: `季度汇报`, `学术答辩`, `产品发布`, `融资路演`, `培训` → `培训课件`, `商务洽谈`. No confidence threshold.
+3. **Apply template** — On match, auto-copy `${SKILL_DIR}/templates/layouts/<layout_template>/` into the project (same commands as Step 3a). Optional `layout_template_alt` for variant scenes (e.g. non-tech product launch).
+4. **Pre-fill Strategist** — `load` returns `prefill` (Eight Confirmations a–h) and `provenance_line`; Step 4 uses these instead of `user_defaults.py prefill` when 3c fired. ⛔ BLOCKING confirmation gate unchanged.
+5. **Validate** — `layout_template` (and `layout_template_alt` when present) must exist under `templates/layouts/<id>/` with `design_spec.md`.
+
+### Commands
+
+```bash
+# List user-facing scene names
+python3 skills/ppt-master/scripts/scene_preset_loader.py list
+
+# Detect from user message (JSON on stdout)
+python3 skills/ppt-master/scripts/scene_preset_loader.py detect --user-text "用季度汇报场景做PPT"
+
+# Load full preset + prefill bundle
+python3 skills/ppt-master/scripts/scene_preset_loader.py load 季度汇报
+```
+
+Stdout (`load`): `scene`, `preset`, `prefill`, `layout_template`, `layout_template_dir`, `provenance_line`.
+
+### Example scene presets
+
+See `semantic_template_map.json` → `scene_presets` keys: `季度汇报`, `学术答辩`, `产品发布`, `融资路演`, `培训课件`, `商务洽谈`. Each entry includes all Eight Confirmation fields plus `layout_template`.
+
 ## Phase Roadmap
 
 | Phase | Focus | Status |
@@ -165,7 +197,8 @@ See the committed file [`semantic_template_map.json`](./semantic_template_map.js
 | 0 | Directory scaffolding and schema files | Active |
 | 1 | Smart defaults loader + Strategist pre-fill + auto-save | Active |
 | 2 | Semantic template matching + Step 3 confirmation gate | Active |
-| 3+ | Preference UI, extended scene routing | Planned |
+| 3 | Scene presets library + Step 3c exact-keyword routing | Active |
+| 4+ | Preference UI, extended scene routing | Planned |
 
 When implementing later phases, update the table above and add a **Consumption** subsection describing which SKILL.md step reads which file.
 

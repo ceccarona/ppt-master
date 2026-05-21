@@ -60,6 +60,7 @@ description: >
 | `${SKILL_DIR}/scripts/update_spec.py` | Propagate a `spec_lock.md` color / font_family change across all generated SVGs |
 | `${SKILL_DIR}/scripts/user_defaults.py` | Smart defaults — load / infer / pre-fill / save Eight Confirmation preferences |
 | `${SKILL_DIR}/scripts/semantic_template_matcher.py` | Semantic layout template matching from natural-language style descriptions |
+| `${SKILL_DIR}/scripts/scene_preset_loader.py` | Exact-keyword scene presets — full Eight Confirmation bundles + layout template |
 
 For complete tool documentation, see `${SKILL_DIR}/scripts/README.md`.
 
@@ -163,9 +164,37 @@ Import source content (choose based on the situation):
 | User input contains | Step 3 action |
 |---|---|
 | An explicit path to a template directory (e.g. `skills/ppt-master/templates/layouts/academic_defense/`, `projects/foo/template/`, or any other absolute / relative path that resolves to a directory containing `design_spec.md` and one or more page SVGs) | Copy that directory's SVGs + `design_spec.md` + assets into the project, advance |
-| No explicit template path | Continue to **3b Semantic Match** (below); if that does not apply, skip to free design |
+| No explicit template path | Continue to **3c Scene Preset** (below); if that does not apply, continue to **3b Semantic Match**; if that does not apply, skip to free design |
 
-There is no slug matching, no name lookup, no fuzzy resolution for explicit paths. A template name without a path does not trigger the copy flow by itself — the user must give a path the AI can `cd` into, **unless** semantic match (3b) proposes one and the user confirms.
+There is no slug matching, no name lookup, no fuzzy resolution for explicit paths. A template name without a path does not trigger the copy flow by itself — the user must give a path the AI can `cd` into, **unless** a scene preset (3c) or semantic match (3b) applies as described below.
+
+#### 3c. Scene preset (Phase 3 — exact keyword, non-blocking)
+
+When the user's input contains **no explicit template directory path**, check for an **exact scene keyword** in the user's initial request **before** semantic matching (3b). Triggers on phrases such as "用季度汇报场景", "融资路演场景", or bare keywords below — no confidence threshold.
+
+**Exact keywords** (first match wins; longer phrases checked first in the loader):
+
+| Keyword in user text | Scene preset key |
+|---|---|
+| `季度汇报` | 季度汇报 |
+| `学术答辩` | 学术答辩 |
+| `产品发布` | 产品发布 |
+| `融资路演` | 融资路演 |
+| `培训` | 培训课件 |
+| `商务洽谈` | 商务洽谈 |
+
+1. Run:
+```bash
+python3 ${SKILL_DIR}/scripts/scene_preset_loader.py detect --user-text "<user initial text>"
+```
+2. If `matched` is true:
+   - Load the full preset: `python3 ${SKILL_DIR}/scripts/scene_preset_loader.py load <scene>`
+   - **Auto-apply layout**: set `TEMPLATE_DIR` to `layout_template_dir` from the load JSON and run the copy commands below (no template confirmation gate — scene choice is explicit).
+   - **Carry prefill into Step 4**: pass `prefill` and `provenance_line` from the load JSON as the opening Eight Confirmation values (a–h). Strategist still runs the ⛔ BLOCKING confirmation gate; user may edit any field.
+   - For tech-product launches, prefer `pixel_retro` from the preset; if the user asks for a non-tech launch, use `layout_template_alt` (`china_telecom_template`) instead.
+3. If `matched` is false: continue to **3b Semantic Match**; if that does not apply, skip to free design.
+
+Scene presets live in `enhancements/semantic_template_map.json` under `scene_presets`. List names: `python3 ${SKILL_DIR}/scripts/scene_preset_loader.py list`.
 
 #### 3b. Semantic template match (Phase 2 — optional blocking step)
 
@@ -254,7 +283,7 @@ Action: AI reads `${LAYOUT_DIR}/design_spec.md` and `${BRAND_DIR}/design_spec.md
 
 If neither gate trips, fusion proceeds silently and Step 3 advances.
 
-**✅ Checkpoint — Default free-design path proceeds to Step 4 without user interaction. If the user's input contains an explicit template directory path, a **confirmed** semantic match (3b), and/or an explicit brand directory path, those directories are copied (or fused) into `<project_path>/templates/` before advancing.**
+**✅ Checkpoint — Default free-design path proceeds to Step 4 without user interaction. If the user's input contains an explicit template directory path, a **scene preset** match (3c), a **confirmed** semantic match (3b), and/or an explicit brand directory path, those directories are copied (or fused) into `<project_path>/templates/` before advancing. Scene presets also supply pre-filled Eight Confirmations for Step 4.**
 
 ---
 
@@ -269,8 +298,10 @@ Read references/strategist.md
 
 **Smart Defaults (Phase 1)** — run **before** presenting the Eight Confirmations bundle. Load persisted preferences, infer scene from source content or the user's description, and pre-fill recommendations (user may still edit every item; ⛔ BLOCKING gate unchanged).
 
+**Scene preset prefill (Phase 3)** — when Step **3c** matched, use `prefill` and `provenance_line` from `scene_preset_loader.py load` as the opening values **instead of** running `user_defaults.py prefill` (scene preset wins over persisted preferences for that session).
+
 1. Gather inference text: primary `sources/*.md` when present; otherwise concatenate the user's topic / requirements from the current conversation.
-2. Run prefill (one of):
+2. Run prefill **unless** Step 3c already supplied `prefill` (one of):
 ```bash
 python3 ${SKILL_DIR}/scripts/user_defaults.py prefill --content-file <project_path>/sources/<main_source>.md
 # when no file yet:

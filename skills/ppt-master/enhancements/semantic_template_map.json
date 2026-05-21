@@ -320,10 +320,163 @@
         "body_baseline_px": 18
       },
       "image_approach": "User-provided product and lab photos; minimal decorative imagery"
+    },
+    "季度汇报": {
+      "layout_template": "government_blue",
+      "layout_template_alt": "china_telecom_template",
+      "default_canvas": "ppt169",
+      "page_count_range": "10-15",
+      "target_audience": "领导, 管理层",
+      "use_case": "季度工作汇报、经营分析、目标复盘与下季度计划",
+      "core_message": "数据增长, 目标达成, 下季度计划",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "professional quarterly report, data-driven, restrained government-enterprise tone",
+      "color_scheme": {
+        "primary": "#1F4E79",
+        "secondary": "#2E75B6",
+        "accent": "#00B4D8",
+        "background": "#FFFFFF",
+        "text": "#1A1A1A"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-outline",
+      "typography_plan": {
+        "title_stack": "\"Source Han Sans SC\", \"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+        "body_stack": "\"Source Han Sans SC\", \"Microsoft YaHei\", Arial, sans-serif",
+        "body_baseline_px": 18
+      },
+      "image_approach": "Data charts on content slides; D) Web-sourced for supporting visuals when approved"
+    },
+    "学术答辩": {
+      "layout_template": "academic_defense",
+      "default_canvas": "ppt169",
+      "page_count_range": "15-20",
+      "target_audience": "答辩委员会, 教授",
+      "use_case": "学位论文答辩、学术报告、科研成果汇报",
+      "core_message": "研究贡献, 方法论, 创新点",
+      "style_mode": "A) General Versatile",
+      "style_descriptor": "academic, formal, rigorous hierarchy, research-oriented",
+      "color_scheme": {
+        "primary": "#2C3E50",
+        "secondary": "#34495E",
+        "accent": "#3498DB",
+        "background": "#FFFFFF",
+        "text": "#2C3E50"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-outline",
+      "typography_plan": {
+        "title_stack": "\"Source Han Serif SC\", SimSun, \"Times New Roman\", serif",
+        "body_stack": "\"Source Han Serif SC\", SimSun, \"Times New Roman\", serif",
+        "body_baseline_px": 24
+      },
+      "image_approach": "Primarily A) No decorative images; user-provided figures; D) Web-sourced for reference visuals when needed"
+    },
+    "产品发布": {
+      "layout_template": "pixel_retro",
+      "layout_template_alt": "china_telecom_template",
+      "default_canvas": "ppt169",
+      "page_count_range": "12-18",
+      "target_audience": "媒体, 客户, 合作伙伴",
+      "use_case": "新品发布会、产品亮点推介、上市计划沟通",
+      "core_message": "产品亮点, 差异化, 上市时间",
+      "style_mode": "A) General Versatile",
+      "style_descriptor": "modern, dynamic, product-forward launch narrative",
+      "color_scheme": {
+        "primary": "#6366F1",
+        "secondary": "#8B5CF6",
+        "accent": "#F59E0B",
+        "background": "#0F172A",
+        "text": "#F8FAFC"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-filled",
+      "typography_plan": {
+        "title_stack": "\"Source Han Sans SC\", \"Microsoft YaHei\", \"Segoe UI\", sans-serif",
+        "body_stack": "Inter, \"Source Han Sans SC\", \"Microsoft YaHei\", sans-serif",
+        "body_baseline_px": 20
+      },
+      "image_approach": "C) AI-generated hero images for cover and feature highlights; product screenshots when available"
+    },
+    "融资路演": {
+      "layout_template": "china_telecom_template",
+      "default_canvas": "ppt169",
+      "page_count_range": "10-15",
+      "target_audience": "投资人, VC",
+      "use_case": "融资路演、商业计划书演示、投资人沟通",
+      "core_message": "市场规模, 商业模式, 团队, 融资需求",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "investor-grade, premium, concise narrative with strong data hierarchy",
+      "color_scheme": {
+        "primary": "#1A1A2E",
+        "secondary": "#16213E",
+        "accent": "#E94560",
+        "background": "#1A1A2E",
+        "text": "#EAEAEA"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-outline",
+      "typography_plan": {
+        "title_stack": "Montserrat, \"Source Han Sans SC\", \"Microsoft YaHei\", sans-serif",
+        "body_stack": "Montserrat, \"Source Han Sans SC\", \"Microsoft YaHei\", Arial, sans-serif",
+        "body_baseline_px": 18
+      },
+      "image_approach": "C) AI-generated high-quality visuals for market and vision slides; minimal stock clutter"
+    },
+    "培训课件": {
+      "layout_template": "government_blue",
+      "default_canvas": "ppt169",
+      "page_count_range": "20-40",
+      "target_audience": "员工, 学员",
+      "use_case": "内部培训、讲师课件、操作指引与案例教学",
+      "core_message": "知识点, 操作步骤, 案例",
+      "style_mode": "A) General Versatile",
+      "style_descriptor": "instructional, clear, approachable training deck",
+      "color_scheme": {
+        "primary": "#0E7490",
+        "secondary": "#14B8A6",
+        "accent": "#22C55E",
+        "background": "#F8FAFC",
+        "text": "#1E293B"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-filled",
+      "typography_plan": {
+        "title_stack": "\"Source Han Sans SC\", \"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+        "body_stack": "\"Source Han Sans SC\", \"Microsoft YaHei\", Arial, sans-serif",
+        "body_baseline_px": 22
+      },
+      "image_approach": "Mixed illustrative diagrams, step screenshots, and B) Placeholder blocks for exercises"
+    },
+    "商务洽谈": {
+      "layout_template": "china_telecom_template",
+      "layout_template_alt": "government_blue",
+      "default_canvas": "ppt169",
+      "page_count_range": "15-25",
+      "target_audience": "客户, 合作伙伴",
+      "use_case": "商务方案洽谈、客户提案、合作模式沟通",
+      "core_message": "解决方案, 案例背书, 合作模式",
+      "style_mode": "B) General Consulting",
+      "style_descriptor": "professional, trustworthy, solution-led business proposal",
+      "color_scheme": {
+        "primary": "#0047AB",
+        "secondary": "#2E75B6",
+        "accent": "#00B4D8",
+        "background": "#FFFFFF",
+        "text": "#1F2937"
+      },
+      "icon_approach": "C) Built-in icon library",
+      "icon_library": "tabler-outline",
+      "typography_plan": {
+        "title_stack": "\"Source Han Sans SC\", \"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+        "body_stack": "\"Source Han Sans SC\", \"Microsoft YaHei\", Arial, sans-serif",
+        "body_baseline_px": 18
+      },
+      "image_approach": "Case-study photography and D) Web-sourced client/industry visuals when approved"
     }
   },
   "_schema_notes": {
     "keywords_to_template": "Maps keyword or tag to layout template ID, e.g. 学术 -> academic_defense, 招商 -> china_telecom_template.",
-    "scene_presets": "Full scene configuration objects for named scenarios (canvas, layout_template, brand path, etc.). Keys align with layout template IDs in layouts_index.json."
+    "scene_presets": "Full scene configuration objects. Keys may be layout template IDs (legacy) or user-facing scene names (季度汇报, 学术答辩, …). layout_template must exist under templates/layouts/."
   }
 }
