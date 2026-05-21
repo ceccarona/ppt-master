@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "last_updated": null,
+  "default_canvas": "ppt169",
+  "default_style": null,
+  "default_color_scheme": null,
+  "default_font": null,
+  "scene_defaults": {},
+  "_schema_notes": {
+    "scene_defaults": "Keyed by scene name, e.g. 季度汇报, 学术答辩. Each value may override any top-level default field."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "keywords_to_template": {},
+  "scene_presets": {},
+  "_schema_notes": {
+    "keywords_to_template": "Maps keyword or tag to layout template ID, e.g. 学术 -> academic_defense, 招商 -> china_telecom_template.",
+    "scene_presets": "Full scene configuration objects for named scenarios (canvas, layout_template, brand path, etc.)."
+  }
+}
